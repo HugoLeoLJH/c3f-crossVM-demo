@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>WebGL Sensing Encoder</title>
+  <!-- <script src="static/js/consts.js"></script> -->
+  <!-- <script src="static/jquery.js"></script> -->
+  <link rel="stylesheet" type="text/css" href="/styles.css">
+
+  <!-- Consolidated Styling -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+
+    h1, h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    h2 {
+      font-size: 22px;
+    }
+
+    #prompt {
+      font-size: 24px;
+      color: blue;
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 18px;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      font-size: 16px;
+      margin: 10px 0;
+      width: 50%;
+    }
+
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+    .blue-bold-text {
+            color: blue;
+            font-weight: bold;
+        }
+    pre {
+      font-size: 16px;
+      background-color: #e9ecef;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+
+    .progress-container {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 20px;
+      background-color: #28a745;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .instruction {
+      font-size: 18px;
+      color: #333;
+      margin: 10px 0;
+    }
+
+    .highlight-red {
+      color: red;
+      font-weight: bold;
+    }
+        /* Output Box Style */
+    .output-box {
+        width: 40%;
+        height: 10px;
+        border: 2px solid #28A745; 
+        background-color: #E6F4EA; 
+        color: #155724;
+        font-size: 16px;
+        padding: 10px;
+        resize: none;
+        margin-top: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+    }
+    /* Output Box Style */
+    .output-box2{
+        width: 100%;
+        height: 150px;
+        border: 2px solid #28A745; 
+        background-color: #E6F4EA; 
+        color: #155724;
+        font-size: 16px;
+        padding: 10px;
+        resize: none;
+        margin-top: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+    }
+  </style>
+</head>
+
+<body>
+  <h1>The Sender Page:</h1>
+  <h2>Steps</h2>
+  <p class="instruction">1. Please click blue <b>Send</b> button to send message and you will see the bit sequence to send in <b>The Sending Message</b> below.</p>
+  <p class="instruction">2. The duration of the demo may vary on different system configurations. Typically, it finishes in three minutes. </p>
+  <p class="instruction">3. After <b>Transmission Process Bar</b> is 100%, you can see the <b>Received Text</b> in the previous <span class="blue-bold-text">The Receiver Page</span> (i.e., the receiver page) and the <b>Bandwidth</b> in <span class="blue-bold-text">The Sender page</span> (i.e., this page).</p>
+
+  <h2>The Sending Message</h2>
+  <!-- Input Box and Button -->
+  <textarea class="output-box2" id="inputText" readonly></textarea>
+  <button onclick="convertToFixedBitSequence()">Send</button>
+  <button onclick="copyInputValue()">Copy</button>
+
+    <!-- Progress Bar -->
+    <h2>Transmission Progress Bar</h2>
+    <p id="processtext" style="font-size: 18px; color: green; margin: 10px 0;"><b></b></p>
+    <div class="progress-container">
+      <div class="progress-bar" id="progress"></div>
+    </div>
+      <label for="Bandwidth">Bandwidth:</label><textarea class="output-box" id="Bandwidth" readonly></textarea>
+
+
+
+  <!-- Display Results Section -->
+  <!-- <h2>Text to Bit Sequence (512bit):</h2>
+  <pre id="result"></pre> -->
+
+
+  <h2>How to Retry the Experiment</h2>
+  <p class="instruction">
+    (1) Close the Sender and Receiver pages . <br>
+    (2) Open the Receiver page, then the Sender, to repeat the experiment.
+  </p>
+
+  <!-- <h2>GPU Utilization Experiment for RQ3.4 in paper (Optional)</h2>
+  <p class="instruction"><b>If you don't want to perform this experiment, please keep the following parameters as 0.</b></p>
+  <p class="instruction"><b>Setting it to a higher value when doing the experiment above will reduce the system's GPU utilization by sacrificing bandwidth.</b></p>
+  <p class="instruction">This parameter is used to set the time interval between two consecutive bits when sending.</p>
+  <p class="instruction">The larger the interval, the more idle the GPU becomes, resulting in lower GPU utilization. </p>
+  <p class="instruction">Please do not input the interval too long to avoid system malfunction.</p>
+  <p class="instruction">Please use the built-in Task Manager in Windows to monitor GPU utilization.</p>
+
+  <label for="interval">The interval between 2 bits (ms): </label>
+  <input type="number" id="interval" name="interval" min="0" step="1" value="0" required><b class="instruction">(Generally 0-180 (ms) is appropriate)</b>
+   -->
+
+
+  <!-- Canvas Section -->
+  <div id="testCanvas"></div>
+  <canvas id="Canvas" height="1" width="1"></canvas>
+
+  <!--<script src="https://cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>-->
+  <!-- <script src="static/js/hamming.js"></script> -->
+  <!-- <script src="static/jquery.js"></script> -->
+  <script src="static/js/workers/senderWorker.js"></script>
+  <script src="static/js/sender.js"></script>
+
+</body>
+</html>
